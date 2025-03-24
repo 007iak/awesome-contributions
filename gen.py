@@ -2,6 +2,7 @@
 
 import os
 import sys
+import codecs
 from PIL import Image, ImageDraw, ImageFont
 from datetime import date, timedelta
 from subprocess import call
@@ -16,8 +17,11 @@ numdays = rows * cols
 def commit(days_ago, msg):
   d = date.today() - timedelta(days = days_ago)
   t = str(d) + " 00:00:00"
+  print("MSG: ", msg);
   os.system("echo " + msg + " > .tmpfile")
+  print(" add file ");
   os.system("git add .tmpfile")
+  print(" get comm date ");
   os.system('GIT_COMMITTER_DATE="'+t+'"' + ' GIT_AUTHOR_DATE="'+t+'"' + ' git commit -m "' +msg+'" 2>&1 >/dev/null')
 
 def rgb2gray(rgb):
@@ -30,20 +34,25 @@ def write_px(x, y, intensity, prefix=""):
   days_ago = numdays+offset - (x*rows+y)
   d = date.today() - timedelta(days = days_ago)
   t = str(d) + " 00:00:00"
-  print "val=",intensity, "x",x,"y",y,"date:",d
-  for i in range(0, intensity):
-    msg = prefix + os.urandom(8).encode("hex")
+  print ("val=",intensity, "x",x,"y",y,"date:",d);
+  for i in range(0, int(intensity)):
+    # print(os.urandom(8)," ",type(os.urandom(8)));
+    # msg = prefix + os.urandom(8).encode("hex")
+    msg = prefix + codecs.encode(os.urandom(8), 'hex').decode();
+    # print( msg ); 
+    #??? msg = prefix + os.urandom(8).decode("hex")
     commit(days_ago, msg)
 
 # Use this function to process a 52x7 image as grayscale
 def process_image(path):
+  print("Path: ", path);
   img = Image.open(path)
   px = img.load()
   size = img.size
   if (52,7) != size:
     raise Exception("Image should be 52x7, got " + size)
   for x in range(size[0]):
-    print "processed line",x
+    print  ("processed line",x);
     for y in range(size[1]):
       val = 255-int(rgb2gray(px[x,y]))
       val /= 16
